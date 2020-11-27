@@ -1,3 +1,6 @@
+
+
+
 -- 176. 第二高的薪水
 -- 考察点:
 -- 1. ifnull(exp1,exp2) 防止出现null
@@ -12,6 +15,9 @@ select ifnull(
     limit 1 offset 1
     ),null
 ) as SecondHighestSalary
+
+——————————————————————————————————————
+
 
 -- 177. 第N高的薪水
 -- 1. limit中不能使用表达式,所以需要在外面进行(N-1)
@@ -32,6 +38,9 @@ BEGIN
       ) as getNthHighestSalary
   );
 END
+
+——————————————————————————————————————
+
 
 -- 181. 超过经理收入的员工
 -- 1.子查询效率很低 
@@ -59,3 +68,85 @@ select a.Name as Employee
 from Employee as a
 join Employee as b
 where a.Salary > b.Salary and b.Id = a.ManagerId
+
+——————————————————————————————————————
+
+
+-- 182. 查找重复的电子邮箱
+-- count()函数的使用
+-- group by的使用方法. 指定字段内容相同的合并为一条,这个过程中存在一个中间临时表.
+-- 具体过程可以看这篇文章
+-- https://blog.csdn.net/qq_41059320/article/details/89281125
+select Email
+from(
+    select Email,count(Email)as num
+    from Person
+    group by Email
+)as tmp
+where num > 1
+
+-- 方法二,因为where无法和group by一起使用.
+-- 所以可以使用having count组合使用
+select Email
+from Person
+group by Email
+having count(Email)>1
+
+——————————————————————————————————————
+
+-- 183. 从不订购的客户
+-- 使用临时表查询
+select Name as Customers
+from (select c.Name as Name,o.Id as o_Id
+    from Customers as c 
+    left join Orders as o
+    on c.id = o.CustomerId
+)as tmp
+where o_Id is null
+-- 直接使用左联结进行查询. 之所以一开始没有使用,是对o.Id理解不足
+select c.Name as Customers
+from Customers as c 
+left join Orders as o
+on c.id = o.CustomerId
+where o.Id is null
+
+——————————————————————————————————————
+
+
+-- 627. 变更性别
+-- if语句. if(exp1,true_vale,false_vale)
+update salary
+set sex = if(sex='m','f','m')
+-- case when语句
+update salary
+set sex = case sex
+    when 'm' then 'f'
+    else 'm'
+    end
+
+——————————————————————————————————————
+
+
+-- 595.大的国家
+-- 直接使用where or
+-- 缺点是开销太大. 如果是单列的话,or并没有问题.
+-- 但如果or涉及到多列查询,每次select只会选取一个index,比如说选取area后,population会进行一次全表扫描
+-- 导致开销飙升
+select name,population,area
+from world
+where area>3000000 or population>25000000
+
+-- 为了解决开销太大的问题,可以使用union.
+-- union可以合并多个查询结果.
+-- 同时注意区分union和union all的区别,前者默认去重,后者暂时全部结果(避免因为重名导致的数据丢失)
+select name,population,area
+from world
+where area>3000000
+union
+select name,population,area
+from world
+where population>25000000
+
+——————————————————————————————————————
+
+
